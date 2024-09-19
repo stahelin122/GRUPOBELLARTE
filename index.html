@@ -4,7 +4,119 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Check-in do Evento</title>
     <style>
-        /* Seu estilo já existente aqui */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .search-box {
+            margin-bottom: 20px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .dashboard {
+            margin: 20px 0;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 14px;
+            color: #333;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+        .new-guest-form {
+            display: none;
+            margin-bottom: 20px;
+        }
+        .new-guest-form input {
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+        }
+        .new-guest-form button {
+            padding: 10px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table th, table td {
+            padding: 12px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        table th {
+            background-color: #f4f4f4;
+        }
+        .check-in-btn, .absent-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .check-in-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .check-in-btn.active {
+            background-color: #ccc;
+            color: #333;
+        }
+        .absent-btn {
+            background-color: #ff4c4c;
+            color: white;
+            margin-left: 5px;
+        }
+        .absent-btn.active {
+            background-color: #ffb3b3;
+        }
+        .checked {
+            background-color: #d4edda;
+        }
+        .absent {
+            background-color: #f8d7da;
+        }
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .btn-container button {
+            padding: 10px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -20,8 +132,6 @@
             <p id="newGuestCount">Novos Cadastros: 0</p>
         </div>
         <div class="btn-container">
-            <input type="file" id="fileUpload" accept=".xlsx, .xls" />
-            <button onclick="uploadFile()">Carregar Convidados</button>
             <button onclick="toggleForm()">Cadastrar Novo Convidado</button>
         </div>
         <div class="new-guest-form" id="newGuestForm">
@@ -47,23 +157,22 @@
         </table>
     </div>
 
-    <!-- Inclua as bibliotecas do Firebase -->
+    <!-- Adicione os scripts do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js"></script>
 
     <script>
-        // Configuração do Firebase (usando o código fornecido)
+        // Configuração do Firebase (use as chaves que você encontrou)
         const firebaseConfig = {
-            apiKey: "AIzaSyB2UGFDOMWZQ34aPnBKp8CxMMWcN7WQLjo",
-            authDomain: "servidor-teste-887c4.firebaseapp.com",
-            projectId: "servidor-teste-887c4",
-            storageBucket: "servidor-teste-887c4.appspot.com",
-            messagingSenderId: "58963004814",
-            appId: "1:58963004814:web:05622222d9aa70762c68df",
-            measurementId: "G-JLWBQ57DEF"
+          apiKey: "AIzaSyALWMWNeWqXZorbXZkWPWAtosHUMp_30OC4",
+          authDomain: "check-list-458e9.firebaseapp.com",
+          projectId: "check-list-458e9",
+          storageBucket: "check-list-458e9.appspot.com",
+          messagingSenderId: "381729417131",
+          appId: "1:381729417131:web:54bd8db15708e5bacd194ee"
         };
 
-        // Inicializar o Firebase
+        // Inicializa o Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
@@ -71,14 +180,29 @@
         let absentCount = 0;
         let newGuestCount = 0;
 
-        // Atualiza o dashboard
         function updateDashboard() {
             document.getElementById("presentCount").innerText = `Presentes: ${presentCount}`;
             document.getElementById("absentCount").innerText = `Ausentes: ${absentCount}`;
             document.getElementById("newGuestCount").innerText = `Novos Cadastros: ${newGuestCount}`;
         }
 
-        // Função para adicionar convidados ao Firestore
+        function toggleCheckIn(button) {
+            // Função de check-in
+        }
+
+        function toggleAbsent(button) {
+            // Função para marcar como ausente
+        }
+
+        function searchTable() {
+            // Função de pesquisa
+        }
+
+        function toggleForm() {
+            const form = document.getElementById('newGuestForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
         function addGuestToFirestore(name, office, profession) {
             db.collection("guests").add({
                 name: name,
@@ -94,7 +218,23 @@
             });
         }
 
-        // Função para carregar convidados do Firestore
+        function addGuest() {
+            const name = document.getElementById('newName').value;
+            const office = document.getElementById('newOffice').value;
+            const profession = document.getElementById('newProfession').value;
+            if (name && office && profession) {
+                addGuestToFirestore(name, office, profession);
+                newGuestCount++;
+                updateDashboard();
+                document.getElementById('newName').value = '';
+                document.getElementById('newOffice').value = '';
+                document.getElementById('newProfession').value = '';
+                toggleForm();
+            } else {
+                alert('Por favor, preencha todos os campos.');
+            }
+        }
+
         function loadGuestsFromFirestore() {
             db.collection("guests").get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
@@ -116,25 +256,6 @@
             });
         }
 
-        // Função de adicionar convidado
-        function addGuest() {
-            const name = document.getElementById('newName').value;
-            const office = document.getElementById('newOffice').value;
-            const profession = document.getElementById('newProfession').value;
-            if (name && office && profession) {
-                addGuestToFirestore(name, office, profession); // Salva no Firestore
-                newGuestCount++;
-                updateDashboard();
-                document.getElementById('newName').value = '';
-                document.getElementById('newOffice').value = '';
-                document.getElementById('newProfession').value = '';
-                toggleForm();
-            } else {
-                alert('Por favor, preencha todos os campos.');
-            }
-        }
-
-        // Carrega os convidados quando a página inicializa
         window.onload = loadGuestsFromFirestore;
 
     </script>
