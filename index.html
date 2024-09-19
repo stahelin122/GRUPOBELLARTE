@@ -4,119 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Check-in do Evento</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        .search-box {
-            margin-bottom: 20px;
-        }
-        .search-box input {
-            width: 100%;
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .dashboard {
-            margin: 20px 0;
-            background-color: #f9f9f9;
-            padding: 10px;
-            border-radius: 5px;
-            text-align: center;
-            font-size: 14px;
-            color: #333;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-        }
-        .new-guest-form {
-            display: none;
-            margin-bottom: 20px;
-        }
-        .new-guest-form input {
-            padding: 10px;
-            font-size: 16px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            width: 100%;
-        }
-        .new-guest-form button {
-            padding: 10px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        table th, table td {
-            padding: 12px;
-            border: 1px solid #ccc;
-            text-align: left;
-        }
-        table th {
-            background-color: #f4f4f4;
-        }
-        .check-in-btn, .absent-btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .check-in-btn {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .check-in-btn.active {
-            background-color: #ccc;
-            color: #333;
-        }
-        .absent-btn {
-            background-color: #ff4c4c;
-            color: white;
-            margin-left: 5px;
-        }
-        .absent-btn.active {
-            background-color: #ffb3b3;
-        }
-        .checked {
-            background-color: #d4edda;
-        }
-        .absent {
-            background-color: #f8d7da;
-        }
-        .btn-container {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .btn-container button {
-            padding: 10px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+        /* Seu estilo aqui */
     </style>
 </head>
 <body>
@@ -132,6 +20,8 @@
             <p id="newGuestCount">Novos Cadastros: 0</p>
         </div>
         <div class="btn-container">
+            <input type="file" id="fileUpload" accept=".xlsx, .xls" />
+            <button onclick="uploadFile()">Carregar Convidados</button>
             <button onclick="toggleForm()">Cadastrar Novo Convidado</button>
         </div>
         <div class="new-guest-form" id="newGuestForm">
@@ -157,62 +47,164 @@
         </table>
     </div>
 
-    <!-- Scripts Firebase usando o módulo -->
-    <script type="module">
-      // Importa as funções necessárias do SDK do Firebase
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-app.js";
-      import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-firestore.js";
+    <!-- Inclui a biblioteca para ler arquivos Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        let presentCount = 0;
+        let absentCount = 0;
+        let newGuestCount = 0;
 
-      // Configuração do Firebase
-      const firebaseConfig = {
-        apiKey: "AIzaSyALWWNeWqXZorbXZkWPWAtosHUmp_3OOC4",
-        authDomain: "check-list-458e9.firebaseapp.com",
-        projectId: "check-list-458e9",
-        storageBucket: "check-list-458e9.appspot.com",
-        messagingSenderId: "381729417131",
-        appId: "1:381729417131:web:3efecac595ac940ed194ee"
-      };
+        function updateDashboard() {
+            document.getElementById("presentCount").innerText = `Presentes: ${presentCount}`;
+            document.getElementById("absentCount").innerText = `Ausentes: ${absentCount}`;
+            document.getElementById("newGuestCount").innerText = `Novos Cadastros: ${newGuestCount}`;
+        }
 
-      // Inicialize o Firebase e Firestore
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
+        function uploadFile() {
+            const fileInput = document.getElementById('fileUpload');
+            const file = fileInput.files[0];
 
-      // Funções para adicionar e carregar convidados
-      async function addGuestToFirestore(name, office, profession) {
-          try {
-              await addDoc(collection(db, "guests"), {
-                  name: name,
-                  office: office,
-                  profession: profession,
-                  status: "CONVIDADO"
-              });
-              alert("Convidado adicionado com sucesso!");
-          } catch (error) {
-              console.error("Erro ao adicionar convidado: ", error);
-          }
-      }
+            if (!file) {
+                alert('Por favor, selecione um arquivo Excel.');
+                return;
+            }
 
-      async function loadGuestsFromFirestore() {
-          const querySnapshot = await getDocs(collection(db, "guests"));
-          querySnapshot.forEach((doc) => {
-              const guest = doc.data();
-              const table = document.getElementById('guestList');
-              const newRow = document.createElement('tr');
-              newRow.innerHTML = `
-                  <td>${guest.name}</td>
-                  <td>${guest.office}</td>
-                  <td>${guest.profession}</td>
-                  <td>${guest.status}</td>
-                  <td>
-                      <button class="check-in-btn" onclick="toggleCheckIn(this)">Check-in</button>
-                      <button class="absent-btn" onclick="toggleAbsent(this)">Ausente</button>
-                  </td>
-              `;
-              table.appendChild(newRow);
-          });
-      }
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
 
-      window.onload = loadGuestsFromFirestore;
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+                rows.slice(1).forEach(row => {
+                    if (row.length) {
+                        const [name, office, profession] = row;
+                        const table = document.getElementById('guestList');
+                        const newRow = document.createElement('tr');
+                        newRow.innerHTML = `
+                            <td>${name}</td>
+                            <td>${office}</td>
+                            <td>${profession}</td>
+                            <td>CONVIDADO</td>
+                            <td>
+                                <button class="check-in-btn" onclick="toggleCheckIn(this)">Check-in</button>
+                                <button class="absent-btn" onclick="toggleAbsent(this)">Ausente</button>
+                            </td>
+                        `;
+                        table.appendChild(newRow);
+                    }
+                });
+
+                updateDashboard();
+                alert('Convidados carregados com sucesso!');
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function toggleCheckIn(button) {
+            const row = button.parentElement.parentElement;
+            const absentBtn = button.nextElementSibling;
+            if (!button.classList.contains('active')) {
+                button.classList.add('active');
+                button.innerText = "Presente";
+                row.classList.add('checked');
+                if (absentBtn.classList.contains('active')) {
+                    absentBtn.classList.remove('active');
+                    absentBtn.innerText = "Ausente";
+                    row.classList.remove('absent');
+                    absentCount--;
+                }
+                presentCount++;
+            } else {
+                button.classList.remove('active');
+                button.innerText = "Check-in";
+                row.classList.remove('checked');
+                presentCount--;
+            }
+            updateDashboard();
+        }
+
+        function toggleAbsent(button) {
+            const row = button.parentElement.parentElement;
+            const checkInBtn = button.previousElementSibling;
+            if (!button.classList.contains('active')) {
+                button.classList.add('active');
+                button.innerText = "Ausente";
+                row.classList.add('absent');
+                if (checkInBtn.classList.contains('active')) {
+                    checkInBtn.classList.remove('active');
+                    checkInBtn.innerText = "Check-in";
+                    row.classList.remove('checked');
+                    presentCount--;
+                }
+                absentCount++;
+            } else {
+                button.classList.remove('active');
+                button.innerText = "Ausente";
+                row.classList.remove('absent');
+                absentCount--;
+            }
+            updateDashboard();
+        }
+
+        function searchTable() {
+            var input = document.getElementById("search");
+            var filter = input.value.toLowerCase();
+            var table = document.getElementById("guestTable");
+            var tr = table.getElementsByTagName("tr");
+            for (var i = 1; i < tr.length; i++) {
+                var tdName = tr[i].getElementsByTagName("td")[0];
+                var tdOffice = tr[i].getElementsByTagName("td")[1];
+                if (tdName || tdOffice) {
+                    var nameValue = tdName.textContent || tdName.innerText;
+                    var officeValue = tdOffice.textContent || tdOffice.innerText;
+                    if (nameValue.toLowerCase().indexOf(filter) > -1 || officeValue.toLowerCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+
+        function toggleForm() {
+            const form = document.getElementById('newGuestForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function addGuest() {
+            const name = document.getElementById('newName').value;
+            const office = document.getElementById('newOffice').value;
+            const profession = document.getElementById('newProfession').value;
+            if (name && office && profession) {
+                const table = document.getElementById('guestList');
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td>${name}</td>
+                    <td>${office}</td>
+                    <td>${profession}</td>
+                    <td>Novo Cadastro</td>
+                    <td>
+                        <button class="check-in-btn active" onclick="toggleCheckIn(this)">Presente</button>
+                        <button class="absent-btn" onclick="toggleAbsent(this)">Ausente</button>
+                    </td>
+                `;
+                table.appendChild(newRow);
+                newGuestCount++;
+                presentCount++;
+                updateDashboard();
+                document.getElementById('newName').value = '';
+                document.getElementById('newOffice').value = '';
+                document.getElementById('newProfession').value = '';
+                toggleForm();
+            } else {
+                alert('Por favor, preencha todos os campos.');
+            }
+        }
+
+        updateDashboard();
     </script>
 </body>
 </html>
