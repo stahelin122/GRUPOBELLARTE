@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check-in do Evento</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fa;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4a4a4a;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            transition: border 0.3s;
+        }
+
+        .search-box input:focus {
+            border-color: #4CAF50;
+        }
+
+        .dashboard {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            background-color: #e9f5e9;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .btn-container button,
+        .btn-container input[type="file"] {
+            padding: 10px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+        }
+
+        .btn-container button:hover {
+            background-color: #45a049;
+        }
+
+        .new-guest-form {
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .new-guest-form input {
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: calc(100% - 22px);
+        }
+
+        .new-guest-form button {
+            padding: 10px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .new-guest-form button:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table th, table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #f4f4f4;
+            color: #4a4a4a;
+        }
+
+        .check-in-btn, .absent-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .check-in-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .check-in-btn.active {
+            background-color: #888;
+            color: white;
+        }
+
+        .absent-btn {
+            background-color: #ff4c4c;
+            color: white;
+            margin-left: 5px;
+        }
+
+        .absent-btn.active {
+            background-color: #ff9999;
+        }
+
+        .checked {
+            background-color: #d4edda;
+        }
+
+        .absent {
+            background-color: #f8d7da;
+        }
+
+        /* Responsividade para tablets */
+        @media screen and (max-width: 768px) {
+            .check-in-btn, .absent-btn {
+                font-size: 12px;
+                padding: 6px 8px;
+            }
+            table th, table td {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Check-in de Convidados</h1>
+        <div class="search-box">
+            <input type="text" id="search" placeholder="Pesquisar por nome ou escritório..." onkeyup="searchTable()">
+        </div>
+        <div class="dashboard">
+            <p><strong>Status do Evento</strong></p>
+            <p id="presentCount">Presentes: 0</p>
+            <p id="absentCount">Ausentes: 0</p>
+            <p id="newGuestCount">Novos Cadastros: 0</p>
+        </div>
+        <div class="btn-container">
+            <input type="file" id="fileUpload" accept=".xlsx, .xls" />
+            <button onclick="uploadFile()">Carregar Convidados</button>
+            <button onclick="toggleForm()">Cadastrar Novo Convidado</button>
+        </div>
+        <div class="new-guest-form" id="newGuestForm">
+            <h3>Novo Convidado</h3>
+            <input type="text" id="newName" placeholder="Nome">
+            <input type="text" id="newOffice" placeholder="Escritório">
+            <input type="text" id="newProfession" placeholder="Profissão">
+            <button onclick="addGuest()">Adicionar Convidado</button>
+        </div>
+        <table id="guestTable">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Escritório</th>
+                    <th>Profissão</th>
+                    <th>Status</th>
+                    <th>Check-in</th>
+                </tr>
+            </thead>
+            <tbody id="guestList">
+                <!-- Convidados inseridos automaticamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        // Código JavaScript permanece o mesmo
+        let presentCount = 0;
+        let absentCount = 0;
+        let newGuestCount = 0;
+
+        function updateDashboard() {
+            document.getElementById("presentCount").innerText = `Presentes: ${presentCount}`;
+            document.getElementById("absentCount").innerText = `Ausentes: ${absentCount}`;
+            document.getElementById("newGuestCount").innerText = `Novos Cadastros: ${newGuestCount}`;
+        }
+
+        function uploadFile() {
+            const fileInput = document.getElementById('fileUpload');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Por favor, selecione um arquivo Excel.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+                rows.slice(1).forEach(row => {
+                    if (row.length) {
+                        const [name, office, profession] = row;
+                        const table = document.getElementById('guestList');
+                        const newRow = document.createElement('tr');
+                        newRow.innerHTML = `
+                            <td>${name}</td>
+                            <td>${office}</td>
+                            <td>${profession}</td>
+                            <td>CONVIDADO</td>
+                            <td>
+                                <button class="check-in-btn" onclick="toggleCheckIn(this)">Check-in</button>
+                                <button class="absent-btn" onclick="toggleAbsent(this)">Ausente</button>
+                            </td>
+                        `;
+                        table.appendChild(newRow);
+                    }
+                });
+
+                updateDashboard();
+                alert('Convidados carregados com sucesso!');
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function toggleCheckIn(button) {
+            const row = button.parentElement.parentElement;
+            const absentBtn = button.nextElementSibling;
+            if (!button.classList.contains('active')) {
+                button.classList.add('active');
+                button.innerText = "Presente";
+                row.classList.add('checked');
+                if (absentBtn.classList.contains('active')) {
+                    absentBtn.classList.remove('active');
+                    absentBtn.innerText = "Ausente";
+                    row.classList.remove('absent');
+                    absentCount--;
+                }
+                presentCount++;
+            } else {
+                button.classList.remove('active');
+                button.innerText = "Check-in";
+                row.classList.remove('checked');
+                presentCount--;
+            }
+            updateDashboard();
+        }
+
+        function toggleAbsent(button) {
+            const row = button.parentElement.parentElement;
+            const checkInBtn = button.previousElementSibling;
+            if (!button.classList.contains('active')) {
+                button.classList.add('active');
+                button.innerText = "Ausente";
+                row.classList.add('absent');
+                if (checkInBtn.classList.contains('active')) {
+                    checkInBtn.classList.remove('active');
+                    checkInBtn.innerText = "Check-in";
+                    row.classList.remove('checked');
+                    presentCount--;
+                }
+                absentCount++;
+            } else {
+                button.classList.remove('active');
+                button.innerText = "Ausente";
+                row.classList.remove('absent');
+                absentCount--;
+            }
+            updateDashboard();
+        }
+
+        function searchTable() {
+            var input = document.getElementById("search");
+            var filter = input.value.toLowerCase();
+            var table = document.getElementById("guestTable");
+            var tr = table.getElementsByTagName("tr");
+            for (var i = 1; i < tr.length; i++) {
+                var tdName = tr[i].getElementsByTagName("td")[0];
+                var tdOffice = tr[i].getElementsByTagName("td")[1];
+                if (tdName || tdOffice) {
+                    var nameValue = tdName.textContent || tdName.innerText;
+                    var officeValue = tdOffice.textContent || tdOffice.innerText;
+                    if (nameValue.toLowerCase().indexOf(filter) > -1 || officeValue.toLowerCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+
+        function toggleForm() {
+            const form = document.getElementById('newGuestForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function addGuest() {
+            const name = document.getElementById('newName').value;
+            const office = document.getElementById('newOffice').value;
+            const profession = document.getElementById('newProfession').value;
+            if (name && office && profession) {
+                const table = document.getElementById('guestList');
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td>${name}</td>
+                    <td>${office}</td>
+                    <td>${profession}</td>
+                    <td>Novo Cadastro</td>
+                    <td>
+                        <button class="check-in-btn active" onclick="toggleCheckIn(this)">Presente</button>
+                        <button class="absent-btn" onclick="toggleAbsent(this)">Ausente</button>
+                    </td>
+                `;
+                table.appendChild(newRow);
+                newGuestCount++;
+                presentCount++;
+                updateDashboard();
+                document.getElementById('newName').value = '';
+                document.getElementById('newOffice').value = '';
+                document.getElementById('newProfession').value = '';
+                toggleForm();
+            } else {
+                alert('Por favor, preencha todos os campos.');
+            }
+        }
+
+        updateDashboard();
+    </script>
+</body>
+</html>
